@@ -1,0 +1,275 @@
+:root {
+  /* Terminal backgrounds */
+  --bg: #030805;
+  --screen: #050b07;
+  --panel: #071009;
+
+  /* Phosphor colours */
+  --green: #39e879;
+  --green-bright: #aaffbd;
+  --green-muted: #398b55;
+
+  /* Borders */
+  --green-border: #245c37;
+
+  /* Status colours */
+  --warning: #d6b66c;
+  --error: #c76b60;
+}
+
+/* Global */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 16px;
+
+  background: var(--bg);
+  color: var(--green-muted);
+
+  font-family: "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Main terminal header */
+.terminal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  padding: 8px 10px;
+
+  color: var(--green);
+  border: 1px solid var(--green-border);
+  background: var(--screen);
+}
+
+.terminal-header h1 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: normal;
+  letter-spacing: 2px;
+  color: var(--green-bright);
+  text-shadow: 0 0 6px rgba(57, 232, 121, 0.35);
+}
+
+.terminal-header span {
+  font-size: 0.75rem;
+  color: var(--green-muted);
+}
+
+/* Main panel workspace */
+.terminal-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1px;
+
+  margin-top: -1px;
+
+  background: var(--green-border);
+  border: 1px solid var(--green-border);
+}
+
+/* Individual panels */
+.terminal-panel {
+  min-width: 0;
+  min-height: 150px;
+
+  padding: 10px;
+  background: var(--screen);
+}
+
+/* Panel headings */
+.terminal-panel h2 {
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+
+  color: var(--green);
+  border-bottom: 1px solid var(--green-border);
+
+  font-size: 0.85rem;
+  font-weight: normal;
+  letter-spacing: 1px;
+}
+
+/* General text */
+p {
+  margin: 5px 0;
+}
+
+strong {
+  color: var(--green-bright);
+}
+
+/* Growth progress bar */
+#growthBar {
+  width: 100%;
+  overflow: hidden;
+
+  margin: 8px 0;
+
+  color: var(--green);
+  font-family: "Courier New", monospace;
+  font-size: clamp(0.65rem, 2vw, 1rem);
+  white-space: pre;
+}
+
+/* Buildings */
+.building {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  padding: 6px 0;
+  border-bottom: 1px dotted var(--green-border);
+}
+
+.building [data-owned] {
+  color: var(--green-bright);
+}
+
+/* Buttons */
+button {
+  padding: 5px 9px;
+
+  background: transparent;
+  color: var(--green);
+  border: 1px solid var(--green-border);
+
+  font-family: inherit;
+  font-size: inherit;
+
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: var(--green);
+  color: var(--bg);
+  box-shadow: 0 0 6px rgba(57, 232, 121, 0.3);
+}
+
+button:active:not(:disabled) {
+  background: var(--green-bright);
+}
+
+button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Production monitor */
+#productionStats p {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+
+  margin: 5px 0;
+  padding-bottom: 4px;
+
+  border-bottom: 1px dotted var(--green-border);
+}
+
+/* CRT overlay */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 2px,
+      rgba(0, 0, 0, 0.18) 3px,
+      transparent 4px
+    ),
+    radial-gradient(
+      ellipse at center,
+      transparent 50%,
+      rgba(0, 0, 0, 0.35) 100%
+    );
+}
+
+/* Smaller screens */
+@media (max-width: 650px) {
+  body {
+    padding: 8px;
+  }
+
+  .terminal-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .terminal-panel {
+    min-height: auto;
+  }
+}
+
+/* Full-width colony panel */
+.colony-panel {
+  grid-column: 1 / -1;
+}
+
+/* Colony action buttons */
+.colony-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Section headings */
+.terminal-panel h2 {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Building names and counts */
+.building {
+  text-transform: uppercase;
+}
+
+/* Resource monitor */
+#productionStats {
+  text-transform: uppercase;
+}
+
+/* Buttons */
+button {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Growth stage */
+#growthStage {
+  text-transform: uppercase;
+}
+#rotWarning {
+  min-height: 1.5em;
+  margin: 5px 0;
+
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+#rotWarning:empty {
+  visibility: hidden;
+}
+
+.warning-caution {
+  color: var(--warning);
+}
+
+.warning-danger {
+  color: var(--error);
+  text-shadow: 0 0 5px rgba(199, 107, 96, 0.4);
+}

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bloom // Biological Monitoring System</title>
+    <script type="module" src="./js/main.js" defer></script>
+  </head>
+
+  <body>
+    <header class="terminal-header">
+      <h1>BLOOM BIOLOGICAL MONITORING SYSTEM</h1>
+      <span>SPECIMEN 001 // SYSTEM ONLINE</span>
+    </header>
+
+    <main class="terminal-layout">
+      <!-- Colony status -->
+      <section class="terminal-panel colony-panel">
+        <h2>[ COLONY STATUS ]</h2>
+
+        <p>
+          SPORES:
+          <span id="spores">0</span>
+        </p>
+
+        <p>
+          GROWTH:
+          <span id="growth">0</span> /
+          <span id="maxGrowth">100</span>
+        </p>
+
+        <pre id="growthBar"></pre>
+
+        <p>
+          TIME UNTIL RIPE:
+          <span id="ripeTime"></span>
+        </p>
+
+        <p>
+          STATUS:
+          <span id="growthStage">Dormant</span>
+        </p>
+
+        <p id="growthDescription">The organism is establishing itself.</p>
+
+        <p id="rotWarning"></p>
+
+        <div class="colony-controls">
+          <button id="feedBtn">[ FEED COLONY ]</button>
+          <button id="harvestBtn">[ HARVEST ]</button>
+        </div>
+      </section>
+
+      <!-- Organic structures -->
+      <section class="terminal-panel">
+        <h2>[ ORGANIC STRUCTURES ]</h2>
+
+        <div class="building" data-building="node">
+          <span data-owned>0</span>
+          <button data-buy>Buy Mycelial Node</button>
+        </div>
+
+        <div class="building" data-building="network">
+          <span data-owned>0</span>
+          <button data-buy>Buy Hyphal Network</button>
+        </div>
+
+        <div class="building" data-building="tendril">
+          <span data-owned>0</span>
+          <button data-buy>Buy Rhizomorphic Tendril</button>
+        </div>
+        <section class="terminal-panel">
+          <h2>[ MUTATIONS ]</h2>
+
+          <button id="feedPowerBtn">Feed Power</button>
+        </section>
+      </section>
+
+      <!-- Production monitor -->
+      <section class="terminal-panel">
+        <h2>[ RESOURCE PRODUCTION ]</h2>
+
+        <div id="productionStats"></div>
+      </section>
+    </main>
+  </body>
+</html>
