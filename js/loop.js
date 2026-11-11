@@ -7,6 +7,7 @@ import {
 import { game } from "./state.js";
 import { COLONY_CONFIG } from "./colony.js";
 
+//Scaling growth by how full colony is?
 const updateColonyGrowth = (ticksPerSecond) => {
   if (game.colony.isRotting) return;
 

@@ -62,10 +62,31 @@ export const getTimeUntilRipe = () => {
 // =======================
 // Harvest
 // =======================
+
+// scaling multipler with growth
+
+const clamp = (val, min, max) => {
+  return Math.max(min, Math.min(val, max));
+};
+
+// Higher than 1 = back loaded
+// Lower than 1 = front loaded
+const harvestCurvePower = 0.7;
+
 export const getHarvestMultiplier = (stage) => {
-  if (stage === RIPENESS.RIPE) return COLONY_CONFIG.ripeBonus;
   if (stage === RIPENESS.ROTTING) return COLONY_CONFIG.rotPenalty;
-  return COLONY_CONFIG.unripeMultiplier;
+  const minHarvest = COLONY_CONFIG.minimumHarvestThreshold;
+  const ripe = getRipeThreshold();
+
+  if (ripe <= minHarvest) return COLONY_CONFIG.ripeBonus;
+
+  const t = (game.colony.growth - minHarvest) / (ripe - minHarvest);
+
+  const multiplier =
+    COLONY_CONFIG.unripeMultiplier +
+    (COLONY_CONFIG.ripeBonus - COLONY_CONFIG.unripeMultiplier) *
+      clamp(t, 0, 1) ** harvestCurvePower;
+  return multiplier;
 };
 
 export const getHarvestReward = () => {
