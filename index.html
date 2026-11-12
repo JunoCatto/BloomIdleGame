@@ -33,7 +33,7 @@
         <pre id="growthBar"></pre>
 
         <p>
-          TIME UNTIL RIPE:
+          TIME UNTIL RIPE: (fix me!!)
           <span id="ripeTime"></span>
         </p>
 
@@ -73,7 +73,15 @@
         <section class="terminal-panel">
           <h2>[ MUTATIONS ]</h2>
 
-          <button id="feedPowerBtn">Feed Power</button>
+          <div class="upgrade" data-upgrade="feedPower">
+            <span data-owned>0</span>
+            <button data-buy>Buy Feed Power</button>
+          </div>
+          <!-- Wont be a buyable upgrade -->
+          <div class="upgrade" data-upgrade="autoHarvester">
+            <span data-owned>0</span>
+            <button data-buy>Buy Auto Harvester</button>
+          </div>
         </section>
       </section>
 

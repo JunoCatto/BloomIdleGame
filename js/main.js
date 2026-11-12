@@ -3,9 +3,9 @@ import { buy, feed, harvest } from "./actions.js";
 import {
   render,
   feedBtn,
-  feedPowerBtn,
   harvestBtn,
   buildingElements,
+  upgradeElements,
 } from "./ui.js";
 
 const bind = (element, action) =>
@@ -16,12 +16,19 @@ const bind = (element, action) =>
 
 bind(feedBtn, feed);
 bind(harvestBtn, harvest);
-bind(feedPowerBtn, () => buy("upgrade", "feedPower"));
 
 for (const id in buildingElements) {
   bind(buildingElements[id].buyBtn, () => buy("building", id));
 }
 
+for (const id in upgradeElements) {
+  bind(upgradeElements[id].buyBtn, () => buy("upgrade", id));
+}
 setInterval(gameTick, 1000 / ticks_per_second);
 setInterval(render, 100);
 render();
+
+// Testing
+
+import { game } from "./state.js";
+window.game = game;

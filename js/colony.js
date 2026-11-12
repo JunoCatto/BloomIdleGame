@@ -3,21 +3,32 @@ export const RIPENESS = {
   RIPE: "Ripe",
   ROTTING: "Rotting",
 };
+// Curve configs
+// Higher than 1 = back loaded curve
+// Lower than 1 = front loaded curve
 
 export const COLONY_CONFIG = {
   maxGrowth: 100,
-  ripeThreshold: 100,
-  feedPower: 2,
-  passiveGrowthRate: 0.2,
-  sporesPerGrowth: 0.05,
 
+  feedPower: 1,
+  passiveGrowthRate: 0.2,
+
+  // How far the growth can actually fall to.
+  growthFloor: 0.05,
+  growthCurvePower: 0.7,
+
+  sporesPerGrowth: 0.05,
+  matureThreshold: 50,
+
+  harvestCurvePower: 0.7,
+
+  ripeThreshold: 100,
   unripeMultiplier: 0.5,
   ripeBonus: 2.0,
   rotPenalty: 0.25,
-
-  minimumHarvestThreshold: 50,
   ripeDurationSeconds: 15,
   rotRate: 2,
+
   growthStages: [
     {
       name: "Dormant",

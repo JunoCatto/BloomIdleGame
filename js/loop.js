@@ -3,6 +3,7 @@ import {
   getPassiveGrowthPerSecond,
   getMakeRates,
   getPassiveProductionPerSecond,
+  getGrowthSlowDown,
 } from "./calculations.js";
 import { game } from "./state.js";
 import { COLONY_CONFIG } from "./colony.js";
@@ -23,7 +24,9 @@ const updateColonyGrowth = (ticksPerSecond) => {
 
     return;
   }
-  const growthGain = getPassiveGrowthPerSecond() / ticksPerSecond;
+  // Growth Slowdown
+  const growthGain =
+    (getPassiveGrowthPerSecond() * getGrowthSlowDown()) / ticksPerSecond;
 
   game.colony.growth = Math.min(
     game.colony.growth + growthGain,

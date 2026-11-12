@@ -4,14 +4,14 @@ export const BUILDING_CONFIG = {
     plural: "Mycelial Nodes",
     cost: 30,
     growth: 0.1,
-    costMultiplier: 1.2,
+    costMultiplier: 10,
   },
 
   network: {
     name: "Hyphal Network",
     plural: "Hyphal Networks",
     cost: 1000,
-    costMultiplier: 1.4,
+    costMultiplier: 100,
     makes: { node: 0.02 },
   },
 
@@ -19,7 +19,7 @@ export const BUILDING_CONFIG = {
     name: "Rhizomorphic Tendril",
     plural: "Rhizomorphic Tendrils",
     cost: 200000,
-    costMultiplier: 1.5,
+    costMultiplier: 1000,
     makes: { network: 0.004 },
   },
 };

@@ -2,6 +2,11 @@ import { BUILDING_CONFIG, MILESTONE } from "./buildings.js";
 import { UPGRADE_CONFIG } from "./upgrades.js";
 import { game } from "./state.js";
 import { COLONY_CONFIG, RIPENESS } from "./colony.js";
+import { harvest } from "./actions.js";
+
+const clamp = (val, min, max) => {
+  return Math.max(min, Math.min(val, max));
+};
 
 // =======================
 // Costs
@@ -20,9 +25,9 @@ export const getCost = (type, id) => {
   ) {
     return Infinity;
   }
-  return Math.ceil(
-    config.cost * Math.pow(config.costMultiplier, game.purchased[id]),
-  );
+
+  const costIncrease = Math.floor(game.purchased[id] / 10);
+  return Math.ceil(config.cost * Math.pow(config.costMultiplier, costIncrease));
 };
 
 // =======================
@@ -49,6 +54,18 @@ export const getDevelopmentStage = () => {
     COLONY_CONFIG.growthStages[0],
   );
 };
+
+// Slowdown colony growth as it reaches ripe
+
+export const getGrowthSlowDown = () => {
+  const f = clamp(game.colony.growth / getRipeThreshold(), 0, 1);
+  const slowDown =
+    COLONY_CONFIG.growthFloor +
+    (1 - COLONY_CONFIG.growthFloor) * (1 - f) ** COLONY_CONFIG.growthCurvePower;
+  return slowDown;
+};
+
+// Wrong for now as colony growth scales
 export const getTimeUntilRipe = () => {
   if (game.colony.isRotting) return 0;
   const remainingGrowth = getRipeThreshold() - game.colony.growth;
@@ -59,23 +76,16 @@ export const getTimeUntilRipe = () => {
 
   return remainingGrowth / growthRate;
 };
+
 // =======================
 // Harvest
 // =======================
 
 // scaling multipler with growth
 
-const clamp = (val, min, max) => {
-  return Math.max(min, Math.min(val, max));
-};
-
-// Higher than 1 = back loaded
-// Lower than 1 = front loaded
-const harvestCurvePower = 0.7;
-
 export const getHarvestMultiplier = (stage) => {
   if (stage === RIPENESS.ROTTING) return COLONY_CONFIG.rotPenalty;
-  const minHarvest = COLONY_CONFIG.minimumHarvestThreshold;
+  const minHarvest = 0; // Starts scaling from 0
   const ripe = getRipeThreshold();
 
   if (ripe <= minHarvest) return COLONY_CONFIG.ripeBonus;
@@ -85,7 +95,7 @@ export const getHarvestMultiplier = (stage) => {
   const multiplier =
     COLONY_CONFIG.unripeMultiplier +
     (COLONY_CONFIG.ripeBonus - COLONY_CONFIG.unripeMultiplier) *
-      clamp(t, 0, 1) ** harvestCurvePower;
+      clamp(t, 0, 1) ** COLONY_CONFIG.harvestCurvePower;
   return multiplier;
 };
 
@@ -140,9 +150,18 @@ export const getPassiveGrowthPerSecond = () => {
 };
 
 // Combines building rates + growth rates for viewing
+const isGrowing = () => {
+  let growth;
+  if (!game.colony.isRotting) {
+    growth = getPassiveGrowthPerSecond() * getGrowthSlowDown();
+  } else {
+    growth = 0;
+  }
+  return growth;
+};
 export const getProductionRates = () => ({
   spores: getPassiveProductionPerSecond(),
-  growth: getPassiveGrowthPerSecond(),
+  growth: isGrowing(),
   ...getMakeRates(),
 });
 
@@ -182,5 +201,14 @@ export const canFeed = () => getStage() === RIPENESS.UNRIPE;
 export const canHarvest = () => {
   const { growth, isRotting } = game.colony;
   if (growth <= 0) return false;
-  return isRotting || growth > COLONY_CONFIG.minimumHarvestThreshold;
+  return isRotting || growth > COLONY_CONFIG.matureThreshold;
+};
+
+export const autoHarvest = () => {
+  if (!game.owned["autoHarvest"]) return;
+
+  setInterval(UPGRADE_CONFIG.autoHarvester.interval);
+  if (canHarvest) {
+    harvest;
+  }
 };

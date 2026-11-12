@@ -3,7 +3,7 @@ import { BUILDING_CONFIG } from "./buildings.js";
 import { UPGRADE_CONFIG } from "./upgrades.js";
 
 export const game = {
-  spores: 100000000,
+  spores: 0,
   colonies: 0,
 
   colony: {

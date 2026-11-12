@@ -39,6 +39,20 @@ document.querySelectorAll("[data-building]").forEach((element) => {
   };
 });
 
+export const upgradeElements = {};
+
+document.querySelectorAll("[data-upgrade]").forEach((element) => {
+  const id = element.dataset.upgrade;
+
+  const ownedEl = element.querySelector("[data-owned]");
+  const buyBtn = element.querySelector("[data-buy]");
+
+  upgradeElements[id] = {
+    ownedEl,
+    buyBtn,
+  };
+});
+
 const growthEl = document.getElementById("growth");
 const growthBarEl = document.getElementById("growthBar");
 const ripeTimeEl = document.getElementById("ripeTime");
@@ -124,11 +138,15 @@ export const renderColony = () => {
 };
 
 export const renderUpgrades = () => {
-  const cost = getCost("upgrade", "feedPower");
-  feedPowerBtn.textContent =
-    `Upgrade Feeding (+${UPGRADE_CONFIG.feedPower.power}) ` + `(Cost: ${cost})`;
-
-  feedPowerBtn.disabled = game.spores < cost;
+  for (const [id, config] of Object.entries(UPGRADE_CONFIG)) {
+    const elements = upgradeElements[id];
+    if (!elements) continue;
+    const cost = getCost("upgrade", id);
+    const count = game.owned[id];
+    elements.ownedEl.textContent = `${count} ${config.name}`;
+    elements.buyBtn.textContent = `[ ${config.name} // ${cost} Spores  ]`;
+    elements.buyBtn.disabled = game.spores < cost;
+  }
 };
 
 export const renderBuildings = () => {
@@ -139,7 +157,7 @@ export const renderBuildings = () => {
     const cost = getCost("building", id);
     const count = game.owned[id];
     elements.ownedEl.textContent = `${count} ${count === 1 ? config.name : config.plural}`;
-    elements.buyBtn.textContent = `[ ${config.name} // ${cost} Spores ]`;
+    elements.buyBtn.textContent = `[ ${config.name} // ${cost} Spores (${game.purchased[id]}) ]`;
     elements.buyBtn.disabled = game.spores < cost;
   }
 };
