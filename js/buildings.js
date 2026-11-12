@@ -10,21 +10,21 @@ export const BUILDING_CONFIG = {
   network: {
     name: "Hyphal Network",
     plural: "Hyphal Networks",
-    cost: 1000,
+    cost: 500,
     costMultiplier: 100,
-    makes: { node: 0.02 },
+    makes: { node: 0.05 },
   },
 
   tendril: {
     name: "Rhizomorphic Tendril",
     plural: "Rhizomorphic Tendrils",
-    cost: 200000,
+    cost: 100000,
     costMultiplier: 1000,
-    makes: { network: 0.004 },
+    makes: { network: 0.01 },
   },
 };
 
-export const MILESTONE = {
+export const MILESTONE_PURCHASE = {
   every: 10, // purchases per doubling
   multiplier: 2, // output multiplier per milestone
 };

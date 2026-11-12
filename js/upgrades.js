@@ -5,9 +5,4 @@ export const UPGRADE_CONFIG = {
     power: 1,
     costMultiplier: 2,
   },
-  autoHarvester: {
-    name: "Auto Harvester",
-    cost: 50,
-    interval: 0,
-  },
 };

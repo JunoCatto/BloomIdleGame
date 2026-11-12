@@ -10,15 +10,15 @@ export const RIPENESS = {
 export const COLONY_CONFIG = {
   maxGrowth: 100,
 
-  feedPower: 1,
+  feedPower: 2,
   passiveGrowthRate: 0.2,
 
   // How far the growth can actually fall to.
-  growthFloor: 0.05,
-  growthCurvePower: 0.7,
+  growthMaxReduction: 0.85,
+  growthCurvePower: 0.8,
 
-  sporesPerGrowth: 0.05,
-  matureThreshold: 50,
+  sporesPerGrowth: 0.15,
+  matureThreshold: 75,
 
   harvestCurvePower: 0.7,
 
@@ -41,8 +41,14 @@ export const COLONY_CONFIG = {
       description: "Mycelium begins spreading through the substrate.",
     },
     {
-      name: "Mature",
+      name: "Established",
       min: 50,
+      description:
+        "The mycelial network has taken hold throughout the substrate.",
+    },
+    {
+      name: "Mature",
+      min: 75,
       description: "The colony is developing a dense biological network.",
     },
     {

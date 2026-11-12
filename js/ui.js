@@ -12,6 +12,7 @@ import {
   getHarvestMultiplier,
   getHarvestReward,
   getProductionRates,
+  getTimeUntilHarvestable,
   getTimeUntilRipe,
   getPassiveProductionPerSecond,
   canFeed,
@@ -55,6 +56,7 @@ document.querySelectorAll("[data-upgrade]").forEach((element) => {
 
 const growthEl = document.getElementById("growth");
 const growthBarEl = document.getElementById("growthBar");
+const harvestableTimeEl = document.getElementById("harvestableTime");
 const ripeTimeEl = document.getElementById("ripeTime");
 
 const growthStageEl = document.getElementById("growthStage");
@@ -69,11 +71,16 @@ const createProductionElements = () => {
   productionStatsEl.innerHTML = "";
 
   const rates = getProductionRates();
-  const resourceNames = Object.keys(rates);
+  const resourceNames = Object.keys(rates).filter(
+    (resource) => resource !== "growthReduction",
+  );
 
   for (const resource of resourceNames) {
     const element = document.createElement("p");
-    element.textContent = `${resource}: 0.00/s`;
+    element.textContent =
+      resource === "growthReduction"
+        ? "Growth Reduction: 0%"
+        : `${resource}: 0.00/s`;
 
     productionStatsEl.appendChild(element);
     productionElements[resource] = element;
@@ -88,6 +95,10 @@ export const renderProduction = () => {
 
   // Automatically updating resource monitor
   for (const [resource, element] of Object.entries(productionElements)) {
+    if (resource === "growth") {
+      element.textContent = `Growth: ${production.growth.toFixed(2)}/s (-${(production.growthReduction * 100).toFixed(1)}%)`;
+      continue;
+    }
     element.textContent = `${capitalize(resource)}: ${(production[resource] ?? 0).toFixed(2)}/s`;
   }
   // Building Spore Production
@@ -115,7 +126,7 @@ export const renderColony = () => {
     Math.floor(growthBarEl.parentElement.clientWidth / 15),
   );
   growthBarEl.textContent = asciiBar(percentage, barLength);
-  // Time until Ripe
+  harvestableTimeEl.textContent = formatTime(getTimeUntilHarvestable());
   ripeTimeEl.textContent = `${formatTime(getTimeUntilRipe())}`;
   const stage = getStage();
   rotWarningEl.textContent =
@@ -137,34 +148,24 @@ export const renderColony = () => {
   feedBtn.disabled = !canFeed();
 };
 
-export const renderUpgrades = () => {
-  for (const [id, config] of Object.entries(UPGRADE_CONFIG)) {
-    const elements = upgradeElements[id];
+export const renderPurchasables = (type, configObject, elementsObject) => {
+  for (const [id, config] of Object.entries(configObject)) {
+    const elements = elementsObject[id];
     if (!elements) continue;
-    const cost = getCost("upgrade", id);
+
+    const cost = getCost(type, id);
     const count = game.owned[id];
-    elements.ownedEl.textContent = `${count} ${config.name}`;
-    elements.buyBtn.textContent = `[ ${config.name} // ${cost} Spores  ]`;
+
+    const ownedName =
+      type === "building" && count !== 1 ? config.plural : config.name;
+    elements.ownedEl.textContent = `${count} ${ownedName}`;
+    elements.buyBtn.textContent = `[ ${config.name} // ${cost} Spores ${type === "building" ? `(${game.purchased[id]})` : ""}  ]`;
     elements.buyBtn.disabled = game.spores < cost;
   }
 };
-
-export const renderBuildings = () => {
-  // Adds elements for each building type.
-  for (const [id, config] of Object.entries(BUILDING_CONFIG)) {
-    const elements = buildingElements[id];
-    if (!elements) continue;
-    const cost = getCost("building", id);
-    const count = game.owned[id];
-    elements.ownedEl.textContent = `${count} ${count === 1 ? config.name : config.plural}`;
-    elements.buyBtn.textContent = `[ ${config.name} // ${cost} Spores (${game.purchased[id]}) ]`;
-    elements.buyBtn.disabled = game.spores < cost;
-  }
-};
-
 export const render = () => {
   renderProduction();
   renderColony();
-  renderUpgrades();
-  renderBuildings();
+  renderPurchasables("building", BUILDING_CONFIG, buildingElements);
+  renderPurchasables("upgrade", UPGRADE_CONFIG, upgradeElements);
 };

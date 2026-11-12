@@ -1,6 +1,7 @@
 import { COLONY_CONFIG } from "./colony.js";
 import { BUILDING_CONFIG } from "./buildings.js";
 import { UPGRADE_CONFIG } from "./upgrades.js";
+import { MILESTONE_CONFIG } from "./milestones.js";
 
 export const game = {
   spores: 0,
@@ -23,6 +24,10 @@ export const game = {
   },
 
   fractions: {},
+
+  milestones: Object.fromEntries(
+    Object.keys(MILESTONE_CONFIG).map((id) => [id, false]),
+  ),
 };
 
 export const resetColony = () => {

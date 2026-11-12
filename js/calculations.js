@@ -1,4 +1,4 @@
-import { BUILDING_CONFIG, MILESTONE } from "./buildings.js";
+import { BUILDING_CONFIG, MILESTONE_PURCHASE } from "./buildings.js";
 import { UPGRADE_CONFIG } from "./upgrades.js";
 import { game } from "./state.js";
 import { COLONY_CONFIG, RIPENESS } from "./colony.js";
@@ -26,7 +26,7 @@ export const getCost = (type, id) => {
     return Infinity;
   }
 
-  const costIncrease = Math.floor(game.purchased[id] / 10);
+  const costIncrease = Math.floor((game.purchased[id] + 1) / 10);
   return Math.ceil(config.cost * Math.pow(config.costMultiplier, costIncrease));
 };
 
@@ -57,24 +57,51 @@ export const getDevelopmentStage = () => {
 
 // Slowdown colony growth as it reaches ripe
 
-export const getGrowthSlowDown = () => {
-  const f = clamp(game.colony.growth / getRipeThreshold(), 0, 1);
-  const slowDown =
-    COLONY_CONFIG.growthFloor +
-    (1 - COLONY_CONFIG.growthFloor) * (1 - f) ** COLONY_CONFIG.growthCurvePower;
-  return slowDown;
+const getReduction = (f) => {
+  const reduction =
+    COLONY_CONFIG.growthMaxReduction *
+    (1 - (1 - f) ** COLONY_CONFIG.growthCurvePower);
+  return reduction;
 };
 
-// Wrong for now as colony growth scales
-export const getTimeUntilRipe = () => {
-  if (game.colony.isRotting) return 0;
-  const remainingGrowth = getRipeThreshold() - game.colony.growth;
-  const growthRate = getPassiveGrowthPerSecond();
+export const getGrowthReduction = () => {
+  const f = clamp(game.colony.growth / getRipeThreshold(), 0, 1);
+  return getReduction(f);
+};
 
-  if (remainingGrowth <= 0) return 0;
-  if (growthRate <= 0) return Infinity;
+export const getGrowthSlowDown = () => 1 - getGrowthReduction();
 
-  return remainingGrowth / growthRate;
+const getTimeUntilGrowth = (targetGrowth) => {
+  if (game.colony.isRotting) return Infinity;
+
+  const startingGrowth = game.colony.growth;
+  if (startingGrowth >= targetGrowth) return 0;
+
+  const passiveGrowth = getPassiveGrowthPerSecond();
+  if (passiveGrowth <= 0) return Infinity;
+
+  const segments = 256;
+  const growthPerSegment = (targetGrowth - startingGrowth) / segments;
+  let elapsed = 0;
+
+  for (let i = 0; i < segments; i++) {
+    const growth = startingGrowth + (i + 0.5) * growthPerSegment;
+    const fraction = clamp(growth / getRipeThreshold(), 0, 1);
+    const slowdown = 1 - getReduction(fraction);
+
+    if (slowdown <= 0) return Infinity;
+    elapsed += growthPerSegment / (passiveGrowth * slowdown);
+  }
+
+  return elapsed;
+};
+
+export const getTimeUntilRipe = () =>
+  getTimeUntilGrowth(getRipeThreshold());
+
+export const getTimeUntilHarvestable = () => {
+  if (canHarvest()) return 0;
+  return getTimeUntilGrowth(COLONY_CONFIG.matureThreshold);
 };
 
 // =======================
@@ -139,7 +166,7 @@ export const getBuildingGrowthPerSecond = () => {
     const growth = BUILDING_CONFIG[id].growth ?? 0;
     const owned = game.owned[id] ?? 0;
 
-    totalGrowth += growth * owned;
+    totalGrowth += growth * owned * getBuildingMultiplier(id);
   }
 
   return totalGrowth;
@@ -150,18 +177,19 @@ export const getPassiveGrowthPerSecond = () => {
 };
 
 // Combines building rates + growth rates for viewing
-const isGrowing = () => {
-  let growth;
-  if (!game.colony.isRotting) {
-    growth = getPassiveGrowthPerSecond() * getGrowthSlowDown();
-  } else {
-    growth = 0;
+const getGrowthRates = () => {
+  if (game.colony.isRotting) {
+    return { growth: 0, growthReduction: 0 };
   }
-  return growth;
+  return {
+    growth: getPassiveGrowthPerSecond() * getGrowthSlowDown(),
+    growthReduction: getGrowthReduction(),
+  };
 };
+
 export const getProductionRates = () => ({
   spores: getPassiveProductionPerSecond(),
-  growth: isGrowing(),
+  ...getGrowthRates(),
   ...getMakeRates(),
 });
 
@@ -181,15 +209,15 @@ export const getPassiveProductionPerSecond = () => {
 
 //Milestones for buildings purchased
 export const getMilestoneCount = (id) => {
-  const every = BUILDING_CONFIG[id].milestoneEvery ?? MILESTONE.every;
+  const every = BUILDING_CONFIG[id].milestoneEvery ?? MILESTONE_PURCHASE.every;
   return Math.floor(game.purchased[id] / every);
 };
 
 export const getBuildingMultiplier = (id) =>
-  Math.pow(MILESTONE.multiplier, getMilestoneCount(id));
+  Math.pow(MILESTONE_PURCHASE.multiplier, getMilestoneCount(id));
 
 export const getPurchasesToMilestone = (id) => {
-  const every = BUILDING_CONFIG[id].milestoneEvery ?? MILESTONE.every;
+  const every = BUILDING_CONFIG[id].milestoneEvery ?? MILESTONE_PURCHASE.every;
   return every - (game.purchased[id] % every);
 };
 // =======================
@@ -201,14 +229,14 @@ export const canFeed = () => getStage() === RIPENESS.UNRIPE;
 export const canHarvest = () => {
   const { growth, isRotting } = game.colony;
   if (growth <= 0) return false;
-  return isRotting || growth > COLONY_CONFIG.matureThreshold;
+  return isRotting || growth >= COLONY_CONFIG.matureThreshold;
 };
 
-export const autoHarvest = () => {
-  if (!game.owned["autoHarvest"]) return;
+// export const autoHarvest = () => {
+//   if (!game.owned["autoHarvest"]) return;
 
-  setInterval(UPGRADE_CONFIG.autoHarvester.interval);
-  if (canHarvest) {
-    harvest;
-  }
-};
+//   setInterval(UPGRADE_CONFIG.autoHarvester.interval);
+//   if (canHarvest) {
+//     harvest;
+//   }
+// };
