@@ -188,7 +188,7 @@ const getGrowthRates = () => {
 
 // Combines building rates + growth rates for viewing
 export const getProductionRates = () => ({
-  spores: getPassiveProductionPerSecond(),
+  // spores: getPassiveProductionPerSecond(),
   ...getGrowthRates(),
   ...getMakeRates(),
 });
