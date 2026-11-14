@@ -17,13 +17,15 @@ const bind = (element, action) =>
 bind(feedBtn, feed);
 bind(harvestBtn, harvest);
 
-for (const id in buildingElements) {
-  bind(buildingElements[id].buyBtn, () => buy("building", id));
-}
+const linkBuyButton = (elementObject, key) => {
+  for (const id in elementObject) {
+    bind(elementObject[id].buyBtn, () => buy(key, id));
+  }
+};
 
-for (const id in upgradeElements) {
-  bind(upgradeElements[id].buyBtn, () => buy("upgrade", id));
-}
+linkBuyButton(buildingElements, "building");
+linkBuyButton(upgradeElements, "upgrade");
+
 setInterval(gameTick, 1000 / ticks_per_second);
 setInterval(render, 100);
 render();

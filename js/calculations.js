@@ -2,7 +2,6 @@ import { BUILDING_CONFIG, MILESTONE_PURCHASE } from "./buildings.js";
 import { UPGRADE_CONFIG } from "./upgrades.js";
 import { game } from "./state.js";
 import { COLONY_CONFIG, RIPENESS } from "./colony.js";
-import { harvest } from "./actions.js";
 
 const clamp = (val, min, max) => {
   return Math.max(min, Math.min(val, max));
@@ -96,8 +95,7 @@ const getTimeUntilGrowth = (targetGrowth) => {
   return elapsed;
 };
 
-export const getTimeUntilRipe = () =>
-  getTimeUntilGrowth(getRipeThreshold());
+export const getTimeUntilRipe = () => getTimeUntilGrowth(getRipeThreshold());
 
 export const getTimeUntilHarvestable = () => {
   if (canHarvest()) return 0;
@@ -112,18 +110,21 @@ export const getTimeUntilHarvestable = () => {
 
 export const getHarvestMultiplier = (stage) => {
   if (stage === RIPENESS.ROTTING) return COLONY_CONFIG.rotPenalty;
-  const minHarvest = 0; // Starts scaling from 0
+  const minHarvest = COLONY_CONFIG.matureThreshold;
   const ripe = getRipeThreshold();
 
   if (ripe <= minHarvest) return COLONY_CONFIG.ripeBonus;
 
-  const t = (game.colony.growth - minHarvest) / (ripe - minHarvest);
-
-  const multiplier =
+  const t = clamp(
+    (game.colony.growth - minHarvest) / (ripe - minHarvest),
+    0,
+    1,
+  );
+  return (
     COLONY_CONFIG.unripeMultiplier +
     (COLONY_CONFIG.ripeBonus - COLONY_CONFIG.unripeMultiplier) *
-      clamp(t, 0, 1) ** COLONY_CONFIG.harvestCurvePower;
-  return multiplier;
+      t ** COLONY_CONFIG.harvestCurvePower
+  );
 };
 
 export const getHarvestReward = () => {
@@ -176,17 +177,16 @@ export const getPassiveGrowthPerSecond = () => {
   return COLONY_CONFIG.passiveGrowthRate + getBuildingGrowthPerSecond();
 };
 
-// Combines building rates + growth rates for viewing
 const getGrowthRates = () => {
   if (game.colony.isRotting) {
-    return { growth: 0, growthReduction: 0 };
+    return { growth: 0 };
   }
   return {
     growth: getPassiveGrowthPerSecond() * getGrowthSlowDown(),
-    growthReduction: getGrowthReduction(),
   };
 };
 
+// Combines building rates + growth rates for viewing
 export const getProductionRates = () => ({
   spores: getPassiveProductionPerSecond(),
   ...getGrowthRates(),

@@ -5,7 +5,7 @@ import {
   getPassiveProductionPerSecond,
   getGrowthSlowDown,
 } from "./calculations.js";
-import { game } from "./state.js";
+import { game, resetColony } from "./state.js";
 import { COLONY_CONFIG } from "./colony.js";
 
 //Scaling growth by how full colony is?

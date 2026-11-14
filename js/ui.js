@@ -12,6 +12,7 @@ import {
   getHarvestMultiplier,
   getHarvestReward,
   getProductionRates,
+  getGrowthReduction,
   getTimeUntilHarvestable,
   getTimeUntilRipe,
   getPassiveProductionPerSecond,
@@ -26,33 +27,24 @@ export const feedBtn = document.getElementById("feedBtn");
 export const harvestBtn = document.getElementById("harvestBtn");
 export const feedPowerBtn = document.getElementById("feedPowerBtn");
 
-export const buildingElements = {};
+export const getElements = (selector, dataKey) => {
+  const elements = {};
+  document.querySelectorAll(selector).forEach((element) => {
+    const id = element.dataset[dataKey];
 
-document.querySelectorAll("[data-building]").forEach((element) => {
-  const id = element.dataset.building;
+    const ownedEl = element.querySelector("[data-owned]");
+    const buyBtn = element.querySelector("[data-buy]");
 
-  const ownedEl = element.querySelector("[data-owned]");
-  const buyBtn = element.querySelector("[data-buy]");
+    elements[id] = {
+      ownedEl,
+      buyBtn,
+    };
+  });
+  return elements;
+};
 
-  buildingElements[id] = {
-    ownedEl,
-    buyBtn,
-  };
-});
-
-export const upgradeElements = {};
-
-document.querySelectorAll("[data-upgrade]").forEach((element) => {
-  const id = element.dataset.upgrade;
-
-  const ownedEl = element.querySelector("[data-owned]");
-  const buyBtn = element.querySelector("[data-buy]");
-
-  upgradeElements[id] = {
-    ownedEl,
-    buyBtn,
-  };
-});
+export const upgradeElements = getElements("[data-upgrade]", "upgrade");
+export const buildingElements = getElements("[data-building]", "building");
 
 const growthEl = document.getElementById("growth");
 const growthBarEl = document.getElementById("growthBar");
@@ -67,21 +59,21 @@ const rotWarningEl = document.getElementById("rotWarning");
 const productionStatsEl = document.getElementById("productionStats");
 const productionElements = {};
 
+// Makes sure that button text isn't including in re-rendering
+const setButtonText = (button, text) => {
+  if (button.textContent !== text) {
+    button.textContent = text;
+  }
+};
+
 const createProductionElements = () => {
   productionStatsEl.innerHTML = "";
 
   const rates = getProductionRates();
-  const resourceNames = Object.keys(rates).filter(
-    (resource) => resource !== "growthReduction",
-  );
+  const resourceNames = Object.keys(rates);
 
   for (const resource of resourceNames) {
     const element = document.createElement("p");
-    element.textContent =
-      resource === "growthReduction"
-        ? "Growth Reduction: 0%"
-        : `${resource}: 0.00/s`;
-
     productionStatsEl.appendChild(element);
     productionElements[resource] = element;
   }
@@ -96,7 +88,7 @@ export const renderProduction = () => {
   // Automatically updating resource monitor
   for (const [resource, element] of Object.entries(productionElements)) {
     if (resource === "growth") {
-      element.textContent = `Growth: ${production.growth.toFixed(2)}/s (-${(production.growthReduction * 100).toFixed(1)}%)`;
+      element.textContent = `Growth: ${production.growth.toFixed(2)}/s (-${(getGrowthReduction() * 100).toFixed(1)}%)`;
       continue;
     }
     element.textContent = `${capitalize(resource)}: ${(production[resource] ?? 0).toFixed(2)}/s`;
@@ -141,7 +133,10 @@ export const renderColony = () => {
 
   // Button Text
   const multiplier = getHarvestMultiplier(stage);
-  harvestBtn.textContent = `[ Harvest ${formatAmount(getHarvestReward())} spores ] (x${multiplier.toFixed(1)})`;
+  setButtonText(
+    harvestBtn,
+    `[ Harvest ${formatAmount(getHarvestReward())} spores ] (x${multiplier.toFixed(2)})`,
+  );
 
   // Button Disabling
   harvestBtn.disabled = !canHarvest();
@@ -159,7 +154,10 @@ export const renderPurchasables = (type, configObject, elementsObject) => {
     const ownedName =
       type === "building" && count !== 1 ? config.plural : config.name;
     elements.ownedEl.textContent = `${count} ${ownedName}`;
-    elements.buyBtn.textContent = `[ ${config.name} // ${cost} Spores ${type === "building" ? `(${game.purchased[id]})` : ""}  ]`;
+    setButtonText(
+      elements.buyBtn,
+      `[ ${config.name} // ${cost} Spores ${type === "building" ? `(${game.purchased[id]})` : ""}  ]`,
+    );
     elements.buyBtn.disabled = game.spores < cost;
   }
 };
