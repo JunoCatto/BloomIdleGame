@@ -2,6 +2,7 @@ import { BUILDING_CONFIG, MILESTONE_PURCHASE } from "./buildings.js";
 import { UPGRADE_CONFIG } from "./upgrades.js";
 import { game } from "./state.js";
 import { COLONY_CONFIG, RIPENESS } from "./colony.js";
+import { MILESTONE_CONFIG } from "./milestones.js";
 
 const clamp = (val, min, max) => {
   return Math.max(min, Math.min(val, max));
@@ -232,11 +233,16 @@ export const canHarvest = () => {
   return isRotting || growth >= COLONY_CONFIG.matureThreshold;
 };
 
-// export const autoHarvest = () => {
-//   if (!game.owned["autoHarvest"]) return;
+// Auto Harvester
+export const isMilestoneMet = (id) => MILESTONE_CONFIG[id];
 
-//   setInterval(UPGRADE_CONFIG.autoHarvester.interval);
-//   if (canHarvest) {
-//     harvest;
-//   }
-// };
+export const getAutoHarvestInterval = () =>
+  MILESTONE_CONFIG.autoHarvester.interval;
+
+export const getAutoHarvestTriggerGrowth = () => {
+  (Math.max(game.autoHarvest.trigger) * getRipeThreshold(),
+    COLONY_CONFIG.matureThreshold);
+};
+
+export const shouldAutoHarvest = () =>
+  game.colony.growth >= getAutoHarvestTriggerGrowth();

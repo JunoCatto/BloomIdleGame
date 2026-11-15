@@ -28,6 +28,7 @@ export const game = {
   milestones: Object.fromEntries(
     Object.keys(MILESTONE_CONFIG).map((id) => [id, false]),
   ),
+  autoHarvest: { timer: 0, trigger: MILESTONE_CONFIG.autoHarvester },
 };
 
 export const resetColony = () => {
