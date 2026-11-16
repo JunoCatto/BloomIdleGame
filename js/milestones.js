@@ -4,7 +4,7 @@ export const MILESTONE_CONFIG = {
     name: "Auto Harvester",
     description: `Purchase ${NODES_REQUIRED} Nodes`,
     requirement: (game) => game.purchased.node >= NODES_REQUIRED,
-    interval: 20,
+    interval: 10,
     trigger: 0.9,
   },
 };

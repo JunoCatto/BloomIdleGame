@@ -7,6 +7,7 @@ import {
 } from "./calculations.js";
 import { game, resetColony } from "./state.js";
 import { COLONY_CONFIG } from "./colony.js";
+import { updateAutomation } from "./automation.js";
 
 //Scaling growth by how full colony is?
 const updateColonyGrowth = (ticksPerSecond) => {
@@ -70,4 +71,5 @@ export const gameTick = () => {
   updateRotting(ticks_per_second);
   updateSporeProduction(ticks_per_second);
   updateBuildingProduction(ticks_per_second);
+  updateAutomation(ticks_per_second);
 };

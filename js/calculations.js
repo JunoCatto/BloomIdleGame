@@ -234,15 +234,18 @@ export const canHarvest = () => {
 };
 
 // Auto Harvester
-export const isMilestoneMet = (id) => MILESTONE_CONFIG[id];
+export const isMilestoneMet = (id) => MILESTONE_CONFIG[id].requirement(game);
 
 export const getAutoHarvestInterval = () =>
   MILESTONE_CONFIG.autoHarvester.interval;
 
 export const getAutoHarvestTriggerGrowth = () => {
-  (Math.max(game.autoHarvest.trigger) * getRipeThreshold(),
-    COLONY_CONFIG.matureThreshold);
+  return Math.max(
+    game.autoHarvest.trigger * getRipeThreshold(),
+    COLONY_CONFIG.matureThreshold,
+  );
 };
 
-export const shouldAutoHarvest = () =>
-  game.colony.growth >= getAutoHarvestTriggerGrowth();
+export const shouldAutoHarvest = () => {
+  return game.colony.growth >= getAutoHarvestTriggerGrowth();
+};

@@ -29,5 +29,6 @@ export const harvest = () => {
   if (!canHarvest()) return;
   const reward = getHarvestReward();
   game.spores += reward;
+  game.colonies++;
   resetColony();
 };

@@ -7,6 +7,11 @@ import {
   buildingElements,
   upgradeElements,
 } from "./ui.js";
+import { saveGame, loadGame } from "./save.js";
+
+loadGame();
+setInterval(saveGame, 100000);
+window.addEventListener("pagehide", saveGame);
 
 const bind = (element, action) =>
   element.addEventListener("click", () => {

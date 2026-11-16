@@ -5,7 +5,7 @@ import { MILESTONE_CONFIG } from "./milestones.js";
 
 export const game = {
   spores: 0,
-  colonies: 0,
+  colonies: 1,
 
   colony: {
     growth: 0,
@@ -28,7 +28,7 @@ export const game = {
   milestones: Object.fromEntries(
     Object.keys(MILESTONE_CONFIG).map((id) => [id, false]),
   ),
-  autoHarvest: { timer: 0, trigger: MILESTONE_CONFIG.autoHarvester },
+  autoHarvest: { timer: 0, trigger: MILESTONE_CONFIG.autoHarvester.trigger },
 };
 
 export const resetColony = () => {

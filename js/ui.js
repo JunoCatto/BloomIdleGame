@@ -53,6 +53,7 @@ const ripeTimeEl = document.getElementById("ripeTime");
 
 const growthStageEl = document.getElementById("growthStage");
 const growthDescriptionEl = document.getElementById("growthDescription");
+const specimenNumber = document.getElementById("specimenNumber");
 
 const rotWarningEl = document.getElementById("rotWarning");
 
@@ -110,6 +111,9 @@ export const renderColony = () => {
   const growthStage = getDevelopmentStage();
   growthStageEl.textContent = growthStage.name;
   growthDescriptionEl.textContent = growthStage.description;
+
+  // Specimen Numbering
+  specimenNumber.textContent = `SPECIMEN ${String(game.colonies).padStart(3, "0")} // SYSTEM ONLINE`;
 
   // ASCII growth bar
   const percentage = game.colony.growth / COLONY_CONFIG.maxGrowth;
