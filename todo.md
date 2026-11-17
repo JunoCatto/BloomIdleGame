@@ -1,11 +1,3 @@
-Timer doesnt work.
+confirm sacrifice works correctly -> Want higher tiers to buff all lower tiers. Also make it unaccessible once all purchased maybe?
 
-Could maybe add change mature threshold -> 75? add another descriptive stage at 50
-
-Need to work on balancing
-
-Make a simulator for time
-
-I want auto-harvester to be milestone unlocked.
-
-The prestige reset will be condensing spores into spore clumps.
+add dial to change autoharvest threshold

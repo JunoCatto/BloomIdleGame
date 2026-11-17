@@ -6,8 +6,9 @@ import { game } from "./state.js";
 import { formatAmount, formatTime, capitalize, asciiBar } from "./format.js";
 
 import {
-  getCost,
+  getPurchaseQuote,
   getStage,
+  getRipeThreshold,
   getDevelopmentStage,
   getHarvestMultiplier,
   getHarvestReward,
@@ -15,9 +16,18 @@ import {
   getGrowthReduction,
   getTimeUntilHarvestable,
   getTimeUntilRipe,
+  getTimeBetweenGrowth,
+  getHarvestRewardAt,
+  getBuildingMultiplier,
+  getSacrificeMultiplier,
+  getSacrificeStep,
+  canSacrifice,
   getPassiveProductionPerSecond,
   canFeed,
   canHarvest,
+  getAutoHarvestTriggerGrowth,
+  getAutoHarvestInterval,
+  shouldAutoHarvest,
 } from "./calculations.js";
 
 const sporeEl = document.getElementById("spores");
@@ -26,6 +36,18 @@ const perSecondEl = document.getElementById("perSecond");
 export const feedBtn = document.getElementById("feedBtn");
 export const harvestBtn = document.getElementById("harvestBtn");
 export const feedPowerBtn = document.getElementById("feedPowerBtn");
+export const sacrificeBtn = document.getElementById("sacrificeBtn");
+export const purchaseModeButtons = document.querySelectorAll(
+  "[data-purchase-mode]",
+);
+
+let purchaseMode = 1;
+
+export const setPurchaseMode = (mode) => {
+  purchaseMode = mode;
+};
+
+export const getPurchaseMode = () => purchaseMode;
 
 export const getElements = (selector, dataKey) => {
   const elements = {};
@@ -36,6 +58,7 @@ export const getElements = (selector, dataKey) => {
     const buyBtn = element.querySelector("[data-buy]");
 
     elements[id] = {
+      container: element,
       ownedEl,
       buyBtn,
     };
@@ -50,12 +73,14 @@ const growthEl = document.getElementById("growth");
 const growthBarEl = document.getElementById("growthBar");
 const harvestableTimeEl = document.getElementById("harvestableTime");
 const ripeTimeEl = document.getElementById("ripeTime");
+const harvestPreviewEl = document.getElementById("harvestPreview");
 
 const growthStageEl = document.getElementById("growthStage");
 const growthDescriptionEl = document.getElementById("growthDescription");
-const specimenNumber = document.getElementById("specimenNumber");
+const specimenNumberEl = document.getElementById("specimenNumber");
 
-const autoHarvest = document.getElementById("autoHarvest");
+const autoHarvestEl = document.getElementById("autoHarvest");
+const sacrificeStatusEl = document.getElementById("sacrificeStatus");
 
 const rotWarningEl = document.getElementById("rotWarning");
 
@@ -115,7 +140,7 @@ export const renderColony = () => {
   growthDescriptionEl.textContent = growthStage.description;
 
   // Specimen Numbering
-  specimenNumber.textContent = `SPECIMEN ${String(game.colonies).padStart(3, "0")} // SYSTEM ONLINE`;
+  specimenNumberEl.textContent = `SPECIMEN ${String(game.colonies).padStart(3, "0")} // SYSTEM ONLINE`;
 
   // ASCII growth bar
   const percentage = game.colony.growth / COLONY_CONFIG.maxGrowth;
@@ -126,6 +151,18 @@ export const renderColony = () => {
   growthBarEl.textContent = asciiBar(percentage, barLength);
   harvestableTimeEl.textContent = formatTime(getTimeUntilHarvestable());
   ripeTimeEl.textContent = `${formatTime(getTimeUntilRipe())}`;
+
+  // Reward Previewer (I would honestly like this to be placed in a sub-menu or something)
+  const matureReward = getHarvestRewardAt(COLONY_CONFIG.matureThreshold);
+  const ripeReward = getHarvestRewardAt(getRipeThreshold());
+  const extraReward = ripeReward - matureReward;
+  const extraWait = getTimeBetweenGrowth(
+    COLONY_CONFIG.matureThreshold,
+    getRipeThreshold(),
+  );
+  harvestPreviewEl.textContent = `HARVEST ESTIMATE: MATURE ${formatAmount(matureReward)} SPORES // RIPE ${formatAmount(ripeReward)} SPORES // +${formatAmount(extraReward)} FOR +${formatTime(extraWait)}`;
+
+  // Rot warning
   const stage = getStage();
   rotWarningEl.textContent =
     stage === RIPENESS.RIPE
@@ -133,7 +170,6 @@ export const renderColony = () => {
       : stage === RIPENESS.ROTTING
         ? "[ WARNING: COLONY IS ROTTING ]"
         : "";
-  // Rot warning
   rotWarningEl.className =
     stage === RIPENESS.ROTTING ? "warning-danger" : "warning-caution";
 
@@ -144,12 +180,6 @@ export const renderColony = () => {
     `[ Harvest ${formatAmount(getHarvestReward())} spores ] (x${multiplier.toFixed(2)})`,
   );
 
-  // Auto Harvest
-  if (game.milestones.autoHarvester) {
-    autoHarvest.textContent = `Auto Harvester Active (${game.autoHarvest.timer}) (${
-      game.autoHarvest.trigger * 100
-    }%)`;
-  }
   // Button Disabling
   harvestBtn.disabled = !canHarvest();
   feedBtn.disabled = !canFeed();
@@ -160,7 +190,8 @@ export const renderPurchasables = (type, configObject, elementsObject) => {
     const elements = elementsObject[id];
     if (!elements) continue;
 
-    const cost = getCost(type, id);
+    const quote = getPurchaseQuote(type, id, purchaseMode);
+    const amount = purchaseMode === "max" ? quote.count : purchaseMode;
     const count = game.owned[id];
 
     const ownedName =
@@ -168,14 +199,53 @@ export const renderPurchasables = (type, configObject, elementsObject) => {
     elements.ownedEl.textContent = `${count} ${ownedName}`;
     setButtonText(
       elements.buyBtn,
-      `[ ${config.name} // ${cost} Spores ${type === "building" ? `(${game.purchased[id]})` : ""}  ]`,
+      `[ ${config.name} x${amount} // ${formatAmount(quote.cost)} Spores ${type === "building" ? `(${game.purchased[id]})` : ""} ]`,
     );
-    elements.buyBtn.disabled = game.spores < cost;
+    elements.buyBtn.disabled = quote.count === 0 || game.spores < quote.cost;
   }
+};
+
+const renderSacrifice = () => {
+  const step = getSacrificeStep();
+  const config = BUILDING_CONFIG[step.building];
+  const purchased = game.purchased[step.building];
+  const multiplier =
+    getBuildingMultiplier(step.building) *
+    getSacrificeMultiplier(step.building);
+
+  sacrificeStatusEl.textContent =
+    `NEXT: ${config.name} ${purchased}/${step.required} // ` +
+    `SACRIFICE ALL PROGRESS TO BOOST ${step.output.toUpperCase()} ` +
+    `FROM x${multiplier} TO x${multiplier * 2}. ` +
+    "MILESTONES ARE KEPT.";
+  setButtonText(sacrificeBtn, "[ SACRIFICE ALL BUILDINGS ]");
+  sacrificeBtn.disabled = !canSacrifice();
+};
+
+const renderPurchaseModes = () => {
+  for (const button of purchaseModeButtons) {
+    const mode =
+      button.dataset.purchaseMode === "max"
+        ? "max"
+        : Number(button.dataset.purchaseMode);
+    button.setAttribute("aria-pressed", String(mode === purchaseMode));
+  }
+};
+
+const renderAutomation = () => {
+  if (!game.milestones.autoHarvester) return;
+
+  const remaining = getAutoHarvestInterval() - game.autoHarvest.timer;
+  autoHarvestEl.textContent = shouldAutoHarvest()
+    ? `[ AUTO HARVESTER: ARMED // HARVESTING IN ${formatTime(remaining)} ]`
+    : `[ AUTO HARVESTER: WAITING FOR ${Math.round(getAutoHarvestTriggerGrowth())}% GROWTH ]`;
 };
 export const render = () => {
   renderProduction();
   renderColony();
   renderPurchasables("building", BUILDING_CONFIG, buildingElements);
   renderPurchasables("upgrade", UPGRADE_CONFIG, upgradeElements);
+  renderSacrifice();
+  renderPurchaseModes();
+  renderAutomation();
 };

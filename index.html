@@ -19,51 +19,70 @@
       <section class="terminal-panel colony-panel">
         <h2>[ COLONY STATUS ]</h2>
 
-        <p>
-          SPORES:
-          <span id="spores">0</span>
-        </p>
+        <div class="colony-status">
+          <p>
+            SPORES:
+            <span id="spores">0</span>
+          </p>
 
-        <p>
-          GROWTH:
-          <span id="growth">0</span> /
-          <span id="maxGrowth">100</span>
-        </p>
+          <p>
+            GROWTH:
+            <span id="growth">0</span> /
+            <span id="maxGrowth">100</span>
+          </p>
 
-        <pre id="growthBar"></pre>
+          <pre id="growthBar"></pre>
 
-        <p>
-          TIME UNTIL HARVESTABLE:
-          <span id="harvestableTime"></span>
-        </p>
+          <p>
+            TIME UNTIL HARVESTABLE:
+            <span id="harvestableTime"></span>
+          </p>
 
-        <p>
-          TIME UNTIL RIPE:
-          <span id="ripeTime"></span>
-        </p>
+          <p>
+            TIME UNTIL RIPE:
+            <span id="ripeTime"></span>
+          </p>
 
-        <p>
-          STATUS:
-          <span id="growthStage">Dormant</span>
-        </p>
+          <p id="harvestPreview"></p>
 
-        <p id="growthDescription">The organism is establishing itself.</p>
+          <p>
+            STATUS:
+            <span id="growthStage">Dormant</span>
+          </p>
 
-        <p id="rotWarning"></p>
+          <p id="growthDescription">The organism is establishing itself.</p>
 
-        <div class="colony-controls">
-          <button id="feedBtn">[ FEED COLONY ]</button>
-          <button id="harvestBtn">[ HARVEST ]</button>
+          <p id="rotWarning"></p>
+
+          <div class="colony-controls">
+            <button id="feedBtn">[ FEED COLONY ]</button>
+            <button id="harvestBtn">[ HARVEST ]</button>
+          </div>
         </div>
-        <!-- Want this to the right of the growth bar etc -->
-        <div class="autoHarvesterDial">
-          <span id="autoHarvest"></span>
-        </div>
+
+        <div class="autoHarvesterDial" id="autoHarvest"></div>
       </section>
 
       <!-- Organic structures -->
       <section class="terminal-panel">
         <h2>[ ORGANIC STRUCTURES ]</h2>
+
+        <div
+          class="purchase-controls"
+          role="group"
+          aria-label="Purchase quantity"
+        >
+          <span>BUY:</span>
+          <button type="button" data-purchase-mode="1" aria-pressed="true">
+            1
+          </button>
+          <button type="button" data-purchase-mode="10" aria-pressed="false">
+            10
+          </button>
+          <button type="button" data-purchase-mode="max" aria-pressed="false">
+            MAX
+          </button>
+        </div>
 
         <div class="building" data-building="node">
           <span data-owned>0</span>
@@ -83,11 +102,19 @@
       <section class="terminal-panel">
         <h2>[ MUTATIONS ]</h2>
 
-        <div class="upgrade" data-upgrade="feedPower">
+        <!-- <div class="upgrade" data-upgrade="feedPower">
           <span data-owned>0</span>
           <button data-buy>Buy Feed Power</button>
-        </div>
+        </div> -->
         <!-- Wont be a buyable upgrade -->
+        <div class="upgrade" data-upgrade="tempo">
+          <span data-owned>0</span>
+          <button data-buy>Buy Metabolic Tempo</button>
+        </div>
+
+        <h2>[ MYCELIAL SACRIFICE ]</h2>
+        <p id="sacrificeStatus"></p>
+        <button id="sacrificeBtn" disabled>[ SACRIFICE ALL BUILDINGS ]</button>
       </section>
       <!-- Production monitor -->
       <section class="terminal-panel">

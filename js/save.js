@@ -20,7 +20,7 @@ export const loadGame = () => {
     const data = localStorage.getItem(SAVE_KEY);
     if (!data) return;
     const saveData = JSON.parse(data);
-    return saveData;
+    Object.assign(game, saveData.game);
   } catch (error) {
     console.log("Failed to load game", error);
     return false;

@@ -11,13 +11,13 @@ export const COLONY_CONFIG = {
   maxGrowth: 100,
 
   feedPower: 2,
-  passiveGrowthRate: 0.2,
+  passiveGrowthRate: 2,
 
   // How far the growth can be reduced by.
-  growthMaxReduction: 0.95,
+  growthMaxReduction: 0.85,
   growthCurvePower: 0.8,
 
-  sporesPerGrowth: 0.15,
+  sporesPerGrowth: 0.3,
   matureThreshold: 75,
 
   harvestCurvePower: 0.3,

@@ -1,4 +1,8 @@
-import { BUILDING_CONFIG, MILESTONE_PURCHASE } from "./buildings.js";
+import {
+  BUILDING_CONFIG,
+  MILESTONE_PURCHASE,
+  SACRIFICE_STEPS,
+} from "./buildings.js";
 import { UPGRADE_CONFIG } from "./upgrades.js";
 import { game } from "./state.js";
 import { COLONY_CONFIG, RIPENESS } from "./colony.js";
@@ -11,13 +15,21 @@ const clamp = (val, min, max) => {
 // =======================
 // Costs
 // =======================
+const getConfig = (type, id) =>
+  type === "building"
+    ? BUILDING_CONFIG[id]
+    : type === "upgrade"
+      ? UPGRADE_CONFIG[id]
+      : null;
+
+const getCostAtPurchase = (config, purchased) => {
+  const step = config.costStep ?? 10;
+  const costIncrease = Math.floor(purchased / step);
+  return Math.ceil(config.cost * Math.pow(config.costMultiplier, costIncrease));
+};
+
 export const getCost = (type, id) => {
-  const config =
-    type === "building"
-      ? BUILDING_CONFIG[id]
-      : type === "upgrade"
-        ? UPGRADE_CONFIG[id]
-        : null;
+  const config = getConfig(type, id);
   if (
     !config ||
     game.owned[id] === undefined ||
@@ -25,9 +37,48 @@ export const getCost = (type, id) => {
   ) {
     return Infinity;
   }
+  return getCostAtPurchase(config, game.purchased[id]);
+};
 
-  const costIncrease = Math.floor((game.purchased[id] + 1) / 10);
-  return Math.ceil(config.cost * Math.pow(config.costMultiplier, costIncrease));
+export const getPurchaseQuote = (type, id, quantity) => {
+  const config = getConfig(type, id);
+  if (
+    !config ||
+    game.owned[id] === undefined ||
+    game.purchased[id] === undefined ||
+    (quantity !== "max" && (!Number.isInteger(quantity) || quantity < 1))
+  ) {
+    return { count: 0, cost: Infinity };
+  }
+
+  if (quantity !== "max") {
+    let cost = 0;
+    for (let count = 0; count < quantity; count++) {
+      const nextCost = getCostAtPurchase(config, game.purchased[id] + count);
+      if (!Number.isFinite(nextCost) || nextCost <= 0) {
+        return { count: quantity, cost: Infinity };
+      }
+      cost += nextCost;
+    }
+    return { count: quantity, cost };
+  }
+
+  let count = 0;
+  let cost = 0;
+  while (true) {
+    const nextCost = getCostAtPurchase(config, game.purchased[id] + count);
+    if (
+      !Number.isFinite(nextCost) ||
+      nextCost <= 0 ||
+      nextCost > game.spores - cost
+    ) {
+      break;
+    }
+    cost += nextCost;
+    count++;
+  }
+
+  return { count, cost };
 };
 
 // =======================
@@ -71,10 +122,7 @@ export const getGrowthReduction = () => {
 
 export const getGrowthSlowDown = () => 1 - getGrowthReduction();
 
-const getTimeUntilGrowth = (targetGrowth) => {
-  if (game.colony.isRotting) return Infinity;
-
-  const startingGrowth = game.colony.growth;
+export const getTimeBetweenGrowth = (startingGrowth, targetGrowth) => {
   if (startingGrowth >= targetGrowth) return 0;
 
   const passiveGrowth = getPassiveGrowthPerSecond();
@@ -96,6 +144,11 @@ const getTimeUntilGrowth = (targetGrowth) => {
   return elapsed;
 };
 
+const getTimeUntilGrowth = (targetGrowth) => {
+  if (game.colony.isRotting) return Infinity;
+  return getTimeBetweenGrowth(game.colony.growth, targetGrowth);
+};
+
 export const getTimeUntilRipe = () => getTimeUntilGrowth(getRipeThreshold());
 
 export const getTimeUntilHarvestable = () => {
@@ -108,24 +161,31 @@ export const getTimeUntilHarvestable = () => {
 // =======================
 
 // scaling multipler with growth
+export const getHarvestMultiplierAt = (growth) => {
+  if (growth >= getRipeThreshold()) {
+    return COLONY_CONFIG.ripeBonus;
+  }
 
-export const getHarvestMultiplier = (stage) => {
-  if (stage === RIPENESS.ROTTING) return COLONY_CONFIG.rotPenalty;
   const minHarvest = COLONY_CONFIG.matureThreshold;
   const ripe = getRipeThreshold();
 
   if (ripe <= minHarvest) return COLONY_CONFIG.ripeBonus;
 
-  const t = clamp(
-    (game.colony.growth - minHarvest) / (ripe - minHarvest),
-    0,
-    1,
-  );
+  const t = clamp((growth - minHarvest) / (ripe - minHarvest), 0, 1);
+
   return (
     COLONY_CONFIG.unripeMultiplier +
     (COLONY_CONFIG.ripeBonus - COLONY_CONFIG.unripeMultiplier) *
       t ** COLONY_CONFIG.harvestCurvePower
   );
+};
+
+export const getHarvestMultiplier = (stage) => {
+  if (stage === RIPENESS.ROTTING) {
+    return COLONY_CONFIG.rotPenalty;
+  }
+
+  return getHarvestMultiplierAt(game.colony.growth);
 };
 
 export const getHarvestReward = () => {
@@ -136,6 +196,12 @@ export const getHarvestReward = () => {
     getHarvestMultiplier(getStage())
   );
 };
+
+export const getHarvestRewardAt = (growth) =>
+  growth *
+  COLONY_CONFIG.sporesPerGrowth *
+  getSporePerGrowthMultiplier(game) *
+  getHarvestMultiplierAt(growth);
 
 export const getFeedPower = () => {
   return (
@@ -155,8 +221,12 @@ export const getMakeRates = () => {
     if (!makes) continue;
     for (const target in makes) {
       rates[target] =
-        (rates[target] ?? 0) +
-        makes[target] * (game.owned[id] ?? 0) * getBuildingMultiplier(id);
+        ((rates[target] ?? 0) +
+          makes[target] *
+            (game.owned[id] ?? 0) *
+            getBuildingMultiplier(id) *
+            getSacrificeMultiplier(id)) *
+        getTempoMultiplier();
     }
   }
   return rates;
@@ -169,14 +239,18 @@ export const getBuildingGrowthPerSecond = () => {
     const growth = BUILDING_CONFIG[id].growth ?? 0;
     const owned = game.owned[id] ?? 0;
 
-    totalGrowth += growth * owned * getBuildingMultiplier(id);
+    totalGrowth +=
+      growth * owned * getBuildingMultiplier(id) * getSacrificeMultiplier(id);
   }
 
   return totalGrowth;
 };
 
 export const getPassiveGrowthPerSecond = () => {
-  return COLONY_CONFIG.passiveGrowthRate + getBuildingGrowthPerSecond();
+  return (
+    (COLONY_CONFIG.passiveGrowthRate + getBuildingGrowthPerSecond()) *
+    getTempoMultiplier()
+  );
 };
 
 const getGrowthRates = () => {
@@ -218,6 +292,21 @@ export const getMilestoneCount = (id) => {
 export const getBuildingMultiplier = (id) =>
   Math.pow(MILESTONE_PURCHASE.multiplier, getMilestoneCount(id));
 
+// Sacrifices progress (soft reset)
+
+export const getSacrificeMultiplier = (id) =>
+  Math.pow(2, game.sacrifices?.[id] ?? 0);
+
+export const getSacrificeStep = () =>
+  SACRIFICE_STEPS[
+    Math.min(game.sacrificeCount ?? 0, SACRIFICE_STEPS.length - 1)
+  ];
+
+export const canSacrifice = () => {
+  const step = getSacrificeStep();
+  return game.purchased[step.building] >= step.required;
+};
+
 export const getPurchasesToMilestone = (id) => {
   const every = BUILDING_CONFIG[id].milestoneEvery ?? MILESTONE_PURCHASE.every;
   return every - (game.purchased[id] % every);
@@ -252,3 +341,9 @@ export const getAutoHarvestTriggerGrowth = () => {
 export const shouldAutoHarvest = () => {
   return game.colony.growth >= getAutoHarvestTriggerGrowth();
 };
+
+// Tempo
+
+export const getTempoMultiplier = () => getTempoBase() ** game.owned.tempo;
+
+const getTempoBase = () => UPGRADE_CONFIG.tempo.speedPerLevel;

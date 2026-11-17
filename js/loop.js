@@ -64,7 +64,7 @@ const updateRotting = (ticksPerSecond) => {
   }
 };
 
-export const ticks_per_second = 50;
+export const ticks_per_second = 20;
 
 export const gameTick = () => {
   updateColonyGrowth(ticks_per_second);

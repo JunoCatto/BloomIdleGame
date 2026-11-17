@@ -23,6 +23,11 @@ export const game = {
     ...Object.fromEntries(Object.keys(UPGRADE_CONFIG).map((id) => [id, 0])),
   },
 
+  sacrificeCount: 0,
+  sacrifices: Object.fromEntries(
+    Object.keys(BUILDING_CONFIG).map((id) => [id, 0]),
+  ),
+
   fractions: {},
 
   milestones: Object.fromEntries(

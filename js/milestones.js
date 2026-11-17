@@ -1,7 +1,7 @@
 // Auto Harvest
-const NODES_REQUIRED = 10;
+const NODES_REQUIRED = 5;
 // 1st Spore Upgrade
-const HARVESTS_REQUIRED = 5;
+const HARVESTS_REQUIRED = 10;
 
 export const MILESTONE_CONFIG = {
   autoHarvester: {
