@@ -2,7 +2,7 @@ import { BUILDING_CONFIG, MILESTONE_PURCHASE } from "./buildings.js";
 import { UPGRADE_CONFIG } from "./upgrades.js";
 import { game } from "./state.js";
 import { COLONY_CONFIG, RIPENESS } from "./colony.js";
-import { MILESTONE_CONFIG } from "./milestones.js";
+import { getSporePerGrowthMultiplier, MILESTONE_CONFIG } from "./milestones.js";
 
 const clamp = (val, min, max) => {
   return Math.max(min, Math.min(val, max));
@@ -132,6 +132,7 @@ export const getHarvestReward = () => {
   return (
     game.colony.growth *
     COLONY_CONFIG.sporesPerGrowth *
+    getSporePerGrowthMultiplier(game) *
     getHarvestMultiplier(getStage())
   );
 };
@@ -232,8 +233,10 @@ export const canHarvest = () => {
   if (growth <= 0) return false;
   return isRotting || growth >= COLONY_CONFIG.matureThreshold;
 };
-
+// =======================
 // Auto Harvester
+// =======================
+
 export const isMilestoneMet = (id) => MILESTONE_CONFIG[id].requirement(game);
 
 export const getAutoHarvestInterval = () =>

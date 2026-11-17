@@ -10,6 +10,7 @@ import { harvest } from "./actions.js";
 const updateMilestones = () => {
   for (const id in MILESTONE_CONFIG) {
     if (!game.milestones[id] && isMilestoneMet(id)) {
+      console.log(`${id} activated!`);
       game.milestones[id] = true;
     }
   }

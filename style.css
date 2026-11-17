@@ -1,13 +1,13 @@
 :root {
   /* Terminal backgrounds */
-  --bg: #030805;
+  --bg: #020403;
   --screen: #050b07;
   --panel: #071009;
 
   /* Phosphor colours */
   --green: #39e879;
   --green-bright: #aaffbd;
-  --green-muted: #398b55;
+  --green-muted: #76b989;
 
   /* Borders */
   --green-border: #245c37;
@@ -24,14 +24,16 @@
 
 body {
   margin: 0;
-  padding: 16px;
+  padding: clamp(16px, 4vw, 48px);
 
   background: var(--bg);
   color: var(--green-muted);
 
   font-family: "Courier New", monospace;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
+
+  min-height: 100vh;
 }
 
 /* Main terminal header */
@@ -95,6 +97,7 @@ body {
   font-size: 0.85rem;
   font-weight: normal;
   letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 /* General text */
@@ -199,21 +202,6 @@ body::after {
     );
 }
 
-/* Smaller screens */
-@media (max-width: 650px) {
-  body {
-    padding: 8px;
-  }
-
-  .terminal-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .terminal-panel {
-    min-height: auto;
-  }
-}
-
 /* Full-width colony panel */
 .colony-panel {
   grid-column: 1 / -1;
@@ -225,12 +213,6 @@ body::after {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
-}
-
-/* Section headings */
-.terminal-panel h2 {
-  text-transform: uppercase;
-  letter-spacing: 1px;
 }
 
 /* Building names and counts */
@@ -272,13 +254,6 @@ button {
 .warning-danger {
   color: var(--error);
   text-shadow: 0 0 5px rgba(199, 107, 96, 0.4);
-}
-
-body {
-  min-height: 100vh;
-  padding: clamp(16px, 4vw, 48px);
-  background: #020403;
-  color: #76b989;
 }
 
 .terminal-header,
@@ -349,5 +324,19 @@ button:active:not(:disabled) {
 
   #productionStats {
     grid-column: auto;
+  }
+}
+
+@media (max-width: 650px) {
+  body {
+    padding: 8px;
+  }
+
+  .terminal-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .terminal-panel {
+    min-height: auto;
   }
 }

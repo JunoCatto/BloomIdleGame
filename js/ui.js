@@ -55,6 +55,8 @@ const growthStageEl = document.getElementById("growthStage");
 const growthDescriptionEl = document.getElementById("growthDescription");
 const specimenNumber = document.getElementById("specimenNumber");
 
+const autoHarvest = document.getElementById("autoHarvest");
+
 const rotWarningEl = document.getElementById("rotWarning");
 
 const productionStatsEl = document.getElementById("productionStats");
@@ -142,6 +144,12 @@ export const renderColony = () => {
     `[ Harvest ${formatAmount(getHarvestReward())} spores ] (x${multiplier.toFixed(2)})`,
   );
 
+  // Auto Harvest
+  if (game.milestones.autoHarvester) {
+    autoHarvest.textContent = `Auto Harvester Active (${game.autoHarvest.timer}) (${
+      game.autoHarvest.trigger * 100
+    }%)`;
+  }
   // Button Disabling
   harvestBtn.disabled = !canHarvest();
   feedBtn.disabled = !canFeed();
